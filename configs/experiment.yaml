@@ -1,0 +1,164 @@
+# ===================================================================
+# CS60055 Hackathon Challenge 2 - pipeline configuration
+#
+# Every value that changes the contents of intermediate_csv/ or
+# windows/ lives here. config_version is hashed into each manifest
+# row so any derived window can be traced back to the settings that
+# produced it (challenge spec hint 9, provenance trail).
+#
+# Bump config_version on ANY change below.
+# ===================================================================
+config_version: 1
+
+paths:
+  raw_room_a: raw/experiment2/realdata/input_data/30ms/csidata
+  raw_room_b: raw/experiment3/Data
+  intermediate: intermediate_csv
+  windows: windows
+  results: results
+  figures: figures
+
+# -------------------------------------------------------------------
+# Stage 1: ingestion
+# -------------------------------------------------------------------
+ingest:
+  n_subcarriers: 256
+
+  room_a:
+    # Nexmon CSI over UDP. Verified across all 1084 captures:
+    # every frame is 1084 bytes with magic 0x1111 and zero exceptions.
+    udp_payload_offset: 42        # Ethernet(14) + IPv4(20) + UDP(8)
+    nexmon_header_bytes: 18
+    magic: 0x1111
+    expected_frame_bytes: 1084
+
+    # Packed-CSI bit layout for BCM4366c0, resolved empirically - never
+    # ported from the source authors' code. Two independent tests agree
+    # (reproduce both with `python -m src.csi_decode --resolve`):
+    #
+    # 1. Bit occupancy over 2.01 M words shows bits 30-31 are ALWAYS 0,
+    #    so only 30 bits are used (12 + 12 + 6). Bits 18-29 and bits
+    #    6-17 have statistically identical occupancy to three decimals
+    #    (0.496/0.498, 0.604/0.606, 0.411/0.411, ...), which is what the
+    #    real and imaginary parts of one signal must look like. Bit 5 is
+    #    always 1, so the 6-bit exponent is always negative (-32..-7).
+    #
+    # 2. Applying the exponent reproduces the 802.11ac VHT80 null
+    #    structure: amplitude at the known guard-band and DC-gap
+    #    subcarriers falls to 0.020 of the data-subcarrier median,
+    #    matching Room B's supplied amplitudes (0.024). WITHOUT the
+    #    exponent that ratio is 0.78-1.01, i.e. the nulls vanish and the
+    #    decode is wrong.
+    mantissa_bits: 12
+    exponent_bits: 6
+    apply_exponent: true
+
+    # Frames whose 802.11 sequence-control field reads 0xFFFF carry
+    # VALID CSI (verified: 976-992 of 1024 payload bytes non-zero,
+    # same amplitude distribution as sequenced frames). Dropping them
+    # leaves a median of 111 observations per capture, which makes the
+    # official 150-observation window unreachable for all 1084
+    # captures. They are therefore retained.
+    keep_unsequenced_frames: true
+
+  room_b:
+    # 1196 files use header "Subcarrier_1..256"; 5 files
+    # (Empty_11, Lying_0, Sitting_0, Standing_0, Walking_0) use a
+    # numeric header "0..255". Both are headers, never data, so the
+    # reader always consumes row 0 as the header and asserts 500
+    # data rows x 256 columns.
+    expected_rows: 500
+    header_row: 0
+
+# -------------------------------------------------------------------
+# Stage 2: quality control  (src/cleaning.py)
+# -------------------------------------------------------------------
+cleaning:
+  drop_non_finite: true
+  drop_all_zero_rows: true
+  drop_duplicate_consecutive: true
+  # A capture must survive QC with at least this many observations to
+  # yield a window. 12 of 1084 Room A captures have fewer than 150
+  # frames in total (3 of them in the supplied validation set), so
+  # short captures are padded rather than dropped - see windowing.
+  min_obs_per_capture: 100
+
+# -------------------------------------------------------------------
+# Stage 3: windowing  (src/windowing.py)
+# -------------------------------------------------------------------
+windowing:
+  length: 150                     # official benchmark input: (150, 256)
+  selection: center               # center | first | strided
+  stride: null                    # only used when selection == strided
+  pad_short_captures: reflect     # reflect | drop
+  windows_per_capture_dev: 1      # >1 only meaningful with strided
+  windows_per_capture_val: 1      # headline numbers use exactly one
+
+# -------------------------------------------------------------------
+# Stage 4: splits  (src/splits.py)
+# -------------------------------------------------------------------
+splits:
+  # Room A validation is SUPPLIED by the source archive (25 per class,
+  # 6 classes = 150 captures). It is never moved into development.
+  room_a_validation: supplied
+  # Room B has no validation directory. We create one once, at the
+  # capture level, 25 per class, with the public seed 42, over
+  # deterministically sorted filenames (spec section 9).
+  room_b_validation_per_class: 25
+  room_b_seed: 42
+
+# -------------------------------------------------------------------
+# Stage 5: normalization  (src/normalization.py)
+#
+# Scope decides what information survives:
+#   global     - one transform for all data; room signature PRESERVED
+#   per_room   - fitted per room;            room signature REMOVED
+#   per_window - fitted on the 150x256 array; room + slow context REMOVED
+#
+# Statistics are always fitted on split == development only. Windows
+# are stored UN-normalized; these presets are applied at load time by
+# src/dataset.py so all three tasks can share one windows/ directory.
+# -------------------------------------------------------------------
+normalize:
+  log1p: true                     # fading is multiplicative; log makes it additive
+  robust: true                    # median/IQR, not mean/std (outlier resistant)
+  fit_on: development             # enforced inside normalization.py
+
+  presets:
+    task1:                        # room ID - keep the room signature
+      detrend: none
+      align: none
+      scope: global
+    task1_honest:                 # room ID with absolute level removed
+      detrend: per_window
+      align: none
+      scope: per_window
+    task2:                        # SSL encoder - static + dynamic channels
+      detrend: two_channel
+      align: none
+      scope: global
+    task3:                        # cross-room transfer - remove the room
+      detrend: per_window
+      align: per_room
+      scope: per_room
+
+# -------------------------------------------------------------------
+# Task settings
+# -------------------------------------------------------------------
+task1:
+  normalize_preset: task1
+  window_length_sweep: [1, 10, 25, 50, 100, 150]   # spec section 11 figure
+
+task2:
+  normalize_preset: task2
+
+task3:
+  normalize_preset: task3
+  ks: [1, 5, 10, 20]
+  directions: [A_to_B, B_to_A]
+  shared_activities: [SIT, STAND, WALK]
+  target_exclusive:
+    room_a: [SITDOWN, STANDUP, FALL]
+    room_b: [EMPTY, LYING]
+
+seed: 42
