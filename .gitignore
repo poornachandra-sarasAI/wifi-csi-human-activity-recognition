@@ -1,29 +1,43 @@
+# ---------------------------------------------------------------
+# Source dataset: never committed (challenge spec section 4).
+# Work from the shared data location; keep only code + results here.
+# ---------------------------------------------------------------
+raw/
+
+# ---------------------------------------------------------------
+# Derived data. Ignored by GLOB, not by directory, so that the
+# directory structure and the committed manifest stay visible.
+# Regenerate with: python -m src.<stage>   (see README)
+# ---------------------------------------------------------------
+intermediate_csv/**/*.csv
+windows/**/*.npy
+
+# Fitted normalization statistics are small and ARE committed
+# (results/norm_*.npz) so that run_episode.py is deterministic.
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
 
 # Environment
+.venv/
+venv/
 .env
 .env.local
-venv/
 
-# Jupyter Notebook
+# Jupyter
 .ipynb_checkpoints/
 
-# PyTorch
-.pt
-.pth
+# Torch checkpoints
 *.pt
 *.pth
 
-# Results & Logs
+# Logs
 *.log
 
-# IDE
+# IDE / OS
 .vscode/
 .idea/
-
-# Other
-raw/
-*.DS_Store
+.DS_Store
