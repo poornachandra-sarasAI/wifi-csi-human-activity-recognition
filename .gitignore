@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+.env
+.env.local
+venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# PyTorch
+.pt
+.pth
+*.pt
+*.pth
+
+# Results & Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Other
+raw/
+*.DS_Store
