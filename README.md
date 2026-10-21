@@ -107,23 +107,55 @@ reach for **all 1,084 captures**. Keeping them gives a median of 221.
 
 See `figures/decode_validation.png`.
 
-## Task 1 is reported two ways, on purpose
+## Task 1: high accuracy is not evidence of room recognition
 
-Two instrumentation differences survive global normalization: Room A and Room B
-amplitudes differ by a global factor of **~490×** (an artifact of the authors'
-unknown integer scaling), and Room A carries a **~4× AGC step** across
-subcarriers 137–187 — the third 20 MHz sub-band — that Room B does not.
+Three instrumentation differences could each explain a near-perfect score
+without any environment fingerprinting, so Task 1 is reported as an ablation
+ladder rather than a single number (`python -m src.task1_ablation`).
 
-| Preset | Normalization | Validation accuracy | Accuracy at window length 1 |
-|---|---|---|---|
-| `task1` | global | **1.0000** | **1.0000** |
-| `task1_honest` | per-window | **0.9927** | 0.8764 |
+| Rung | What is removed | Validation accuracy |
+|---|---|---|
+| `task1` — global normalization | nothing; ~490× amplitude gap kept | **1.0000** |
+| `task1_subband` | per-sub-band AGC offsets | **1.0000** |
+| `task1_honest` — per-window | all static per-subcarrier structure | **0.9927** |
+| `task1_honest` + sequenced frames only | Room A's frame interleaving | **0.9418** |
 
-`task1` is perfect from a *single observation*, which is proof it reads a
-constant scale offset rather than the environment. `task1_honest` removes the
-absolute level and climbs 0.876 → 0.996 as the window grows, which is the
-defensible environment-fingerprint claim. The gap between the two rows is the
-informative result (§12, room-versus-session confound).
+Read it in order:
+
+1. **`task1` is already perfect at a window length of one observation.** A
+   single CSI sample cannot carry temporal structure, so this is a constant
+   scale offset: our Room A decode and Room B's supplied integers differ by a
+   global factor of **~490×**.
+2. **Neutralising the sub-band AGC step changes nothing.** Room A carries a ~4×
+   gain step across subcarriers 135–187 (the third 20 MHz sub-band) that Room B
+   does not, but removing it leaves accuracy at 1.0000 — the amplitude gap is
+   present *within* every sub-band too.
+3. **Per-window normalization erases the static profile entirely** (verified:
+   median, band-2 offset and spread all become exactly 0.0) and accuracy only
+   falls to 0.9927. What remains is temporal, not static.
+4. **That residue is substantially Room A's frame interleaving.** Keeping the
+   `0xFFFF` frames — which the 150-observation requirement forces — interleaves
+   two streams with very different statistics:
+
+   | Room A stream | lag-1 autocorrelation | std/IQR |
+   |---|---|---|
+   | sequenced only | +0.54 … +0.84 | 0.570 |
+   | `0xFFFF` only | +0.01 … +0.13 | — |
+   | interleaved (as ingested) | **−0.15 … −0.66** | 1.133 |
+   | Room B | +0.035 | 0.979 |
+
+   Ingesting only the sequenced stream (`ingest.room_a.frame_stream: sequenced`)
+   drops accuracy to 0.9418.
+
+**What Task 1 can honestly claim.** Accuracy stays above 0.94 at every rung, so
+there is real discriminative signal — but every rung still leaves at least one
+instrumentation difference intact. Even the strictest setting leaves Room A at
+lag-1 +0.656 against Room B's +0.035, i.e. the two sessions differ in effective
+sampling dynamics. This benchmark cannot separate *room* from *recording
+session and pipeline*, which is precisely the confound named in §12.1. Report
+the ladder, not the headline.
+
+Figures: `figures/task1_accuracy_vs_window_length.png`, `figures/task1_ablation.png`.
 
 ## Contracts — frozen, do not edit in place
 

@@ -54,6 +54,7 @@ class Stats:
     fitted_on_captures: tuple[str, ...] = ()
     log1p: bool = True
     robust: bool = True
+    subband: int | None = None
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -61,6 +62,7 @@ class Stats:
             "scope": self.scope,
             "log1p": self.log1p,
             "robust": self.robust,
+            "subband": -1 if self.subband is None else self.subband,
             "fitted_on_captures": np.array(self.fitted_on_captures, dtype=object),
         }
         for key, value in self.center.items():
@@ -83,7 +85,43 @@ class Stats:
             fitted_on_captures=tuple(blob["fitted_on_captures"].tolist()),
             log1p=bool(blob["log1p"]),
             robust=bool(blob["robust"]),
+            subband=None if int(blob["subband"]) < 0 else int(blob["subband"]),
         )
+
+
+def neutralize_subbands(window: np.ndarray, n_bands: int) -> np.ndarray:
+    """Remove a constant gain offset from each contiguous sub-band.
+
+    The BCM4366c0 applies separate AGC per 20 MHz sub-band, and Room A
+    carries a ~4x step across subcarriers 135-187 (the third sub-band)
+    that Room B does not. Subtracting each sub-band's own median - taken
+    over the window's own samples, so nothing is fitted - removes that
+    step and the global inter-room level gap, while PRESERVING the
+    spectral shape within each sub-band.
+
+    This is the middle rung of the Task 1 ablation ladder: stronger than
+    leaving the static profile intact, weaker than per-window scope,
+    which erases per-subcarrier static structure entirely.
+    """
+    out = np.asarray(window, dtype=np.float32).copy()
+    n_subcarriers = out.shape[1]
+    if n_subcarriers % n_bands:
+        raise ValueError(f"{n_subcarriers} subcarriers do not split into {n_bands} bands")
+    width = n_subcarriers // n_bands
+    for band in range(n_bands):
+        columns = slice(band * width, (band + 1) * width)
+        out[:, columns] -= np.median(out[:, columns])
+    return out
+
+
+def _pre(window: np.ndarray, log1p: bool, subband: int | None) -> np.ndarray:
+    """Preprocessing applied identically when fitting and when applying."""
+    out = np.asarray(window, dtype=np.float32)
+    if log1p:
+        out = np.log1p(out)
+    if subband:
+        out = neutralize_subbands(out, subband)
+    return out
 
 
 def _center_scale(values: np.ndarray, robust: bool) -> tuple[np.ndarray, np.ndarray]:
@@ -106,10 +144,12 @@ def fit(
     """Fit statistics for a preset, using DEVELOPMENT windows only."""
     cfg = cfg or config.load()
     settings = cfg["normalize"]
-    scope = settings["presets"][preset]["scope"]
+    preset_cfg = settings["presets"][preset]
+    scope = preset_cfg["scope"]
+    subband = preset_cfg.get("subband_neutralize")
     log1p, robust = settings["log1p"], settings["robust"]
 
-    stats = Stats(scope=scope, log1p=log1p, robust=robust)
+    stats = Stats(scope=scope, log1p=log1p, robust=robust, subband=subband)
     if scope == "per_window":
         # Nothing to fit: a per-window transform is a deterministic
         # function of the sample itself and so is leakage-free.
@@ -131,7 +171,7 @@ def fit(
         stacked = []
         for row in rows.itertuples(index=False):
             window = np.load(cfg.path("windows") / row.split / f"{row.window_id}.npy")
-            stacked.append(np.log1p(window) if log1p else window)
+            stacked.append(_pre(window, log1p, subband))
             used.append(row.capture_id)
         pooled = np.concatenate(stacked, axis=0)
         stats.center[key], stats.scale[key] = _center_scale(pooled, robust)
@@ -147,9 +187,7 @@ def apply(
     room: str | None = None,
 ) -> np.ndarray:
     """Apply a fitted preset to one (150, 256) window."""
-    out = np.asarray(window, dtype=np.float32)
-    if stats.log1p:
-        out = np.log1p(out)
+    out = _pre(window, stats.log1p, stats.subband)
 
     detrend = preset_cfg["detrend"]
     static = None

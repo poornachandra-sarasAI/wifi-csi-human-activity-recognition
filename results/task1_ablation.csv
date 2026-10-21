@@ -1,0 +1,13 @@
+experiment,preset,region,n_subcarriers,metric,value
+task1_ablation,task1,all,256,accuracy,1.0
+task1_ablation,task1,no_agc,192,accuracy,1.0
+task1_ablation,task1,only_agc,64,accuracy,1.0
+task1_ablation,task1,no_nulls,242,accuracy,1.0
+task1_ablation,task1_subband,all,256,accuracy,1.0
+task1_ablation,task1_subband,no_agc,192,accuracy,1.0
+task1_ablation,task1_subband,only_agc,64,accuracy,1.0
+task1_ablation,task1_subband,no_nulls,242,accuracy,1.0
+task1_ablation,task1_honest,all,256,accuracy,0.9927272727272727
+task1_ablation,task1_honest,no_agc,192,accuracy,0.9818181818181818
+task1_ablation,task1_honest,only_agc,64,accuracy,0.9927272727272727
+task1_ablation,task1_honest,no_nulls,242,accuracy,1.0

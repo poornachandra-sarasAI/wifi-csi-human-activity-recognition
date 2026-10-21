@@ -136,7 +136,9 @@ def read_capture(
     the 1084 Room A captures. See configs/experiment.yaml.
     """
     cfg = cfg or config.load()
-    keep_unsequenced = cfg["ingest"]["room_a"]["keep_unsequenced_frames"]
+    settings = cfg["ingest"]["room_a"]
+    stream = settings.get("frame_stream", "all")
+    keep_unsequenced = settings["keep_unsequenced_frames"] and stream == "all"
 
     frames: list[CsiFrame] = []
     report = {"pcap_frames": 0, "pcap_not_csi": 0, "pcap_unsequenced": 0}
@@ -151,6 +153,8 @@ def read_capture(
             report["pcap_unsequenced"] += 1
             if not keep_unsequenced:
                 continue
+        elif stream == "unsequenced":
+            continue
         frames.append(parsed)
 
     report["pcap_kept"] = len(frames)

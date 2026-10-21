@@ -84,7 +84,7 @@ def evaluate(preset: str, cfg: config.Config, lengths=None) -> pd.DataFrame:
 def main() -> int:
     cfg = config.load()
     tables = []
-    for preset in ("task1", "task1_honest"):
+    for preset in ("task1", "task1_subband", "task1_honest"):
         print(f"\n=== {preset} ===")
         table = evaluate(preset, cfg)
         print(table[["window_length", "value"]].to_string(index=False))

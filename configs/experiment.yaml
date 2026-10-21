@@ -8,7 +8,7 @@
 #
 # Bump config_version on ANY change below.
 # ===================================================================
-config_version: 1
+config_version: 2
 
 paths:
   raw_room_a: raw/experiment2/realdata/input_data/30ms/csidata
@@ -60,6 +60,17 @@ ingest:
     # official 150-observation window unreachable for all 1084
     # captures. They are therefore retained.
     keep_unsequenced_frames: true
+
+    # Which Room A frame stream to ingest.
+    #   all        both streams interleaved - REQUIRED to reach 150 obs
+    #   sequenced  only frames with a real 802.11 sequence number
+    # The two streams have very different temporal statistics (lag-1
+    # autocorrelation +0.77 for sequenced frames, +0.06 for the 0xFFFF
+    # stream, -0.33 interleaved), so interleaving creates an alternating
+    # structure present in Room A and absent from Room B. 'sequenced'
+    # exists to quantify that artifact; it yields a median of 111
+    # observations per capture and so needs padding to reach 150.
+    frame_stream: all
 
   room_b:
     # 1196 files use header "Subcarrier_1..256"; 5 files
@@ -124,23 +135,37 @@ normalize:
   robust: true                    # median/IQR, not mean/std (outlier resistant)
   fit_on: development             # enforced inside normalization.py
 
+  # The three task1* presets form a nested ablation ladder over how much
+  # STATIC per-subcarrier structure survives:
+  #   task1          everything: global level + sub-band gain + spectral shape
+  #   task1_subband  sub-band offsets removed, within-band shape KEPT
+  #   task1_honest   no static structure at all; temporal dynamics only
   presets:
     task1:                        # room ID - keep the room signature
       detrend: none
       align: none
       scope: global
+      subband_neutralize: null
+    task1_subband:                # remove the receiver AGC sub-band step
+      detrend: none
+      align: none
+      scope: global
+      subband_neutralize: 4       # 4 x 64 subcarriers = the 20 MHz sub-bands
     task1_honest:                 # room ID with absolute level removed
       detrend: per_window
       align: none
       scope: per_window
+      subband_neutralize: null
     task2:                        # SSL encoder - static + dynamic channels
       detrend: two_channel
       align: none
       scope: global
+      subband_neutralize: null
     task3:                        # cross-room transfer - remove the room
       detrend: per_window
       align: per_room
       scope: per_room
+      subband_neutralize: null
 
 # -------------------------------------------------------------------
 # Task settings
