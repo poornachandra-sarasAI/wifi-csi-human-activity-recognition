@@ -1,0 +1,3 @@
+experiment,preset,room_a_frame_stream,metric,value
+task1_frame_stream_ablation,task1_honest,sequenced,accuracy,0.9418181818181818
+task1_frame_stream_ablation,task1_honest,all,accuracy,0.9927

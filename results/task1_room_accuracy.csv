@@ -5,6 +5,12 @@ task1_room_id,task1,25,accuracy,1.0
 task1_room_id,task1,50,accuracy,1.0
 task1_room_id,task1,100,accuracy,1.0
 task1_room_id,task1,150,accuracy,1.0
+task1_room_id,task1_subband,1,accuracy,0.9963636363636363
+task1_room_id,task1_subband,10,accuracy,1.0
+task1_room_id,task1_subband,25,accuracy,1.0
+task1_room_id,task1_subband,50,accuracy,1.0
+task1_room_id,task1_subband,100,accuracy,1.0
+task1_room_id,task1_subband,150,accuracy,1.0
 task1_room_id,task1_honest,1,accuracy,0.8763636363636363
 task1_room_id,task1_honest,10,accuracy,0.9927272727272727
 task1_room_id,task1_honest,25,accuracy,0.9963636363636363
