@@ -205,10 +205,31 @@ Read it as:
    Room B's scores.
 
 **For Task 3:** `from src.encoder import load_pretrained, embed`, then
-`embed(load_pretrained(cfg, "full", seed), x)` on `task2`-preset windows gives
-`(n, 128)` embeddings. Weights are gitignored; rebuild them with
-`python -m src.ssl_pretrain`. Because of point 3, normalize per room (inputs
-or embeddings) before transferring prototypes across rooms.
+`embed(load_pretrained(cfg, "full", seed), x)` gives `(n, 128)` embeddings.
+Weights are gitignored; rebuild them with `python -m src.ssl_pretrain`.
+Three things to know first:
+
+- `embed()` takes **`task2`-preset** windows `(n, 150, 256, 2)`. The `task3`
+  preset returns `(n, 150, 256)` and is rejected. Load with `task2` and do any
+  per-room normalization on the embeddings.
+- **Per-room normalization alone does not make SIT/STAND/WALK transfer.**
+  Development-only check, a linear probe fitted in one room and scored on the
+  other room's development windows:
+
+  | Features | B → A macro-F1 | A → B macro-F1 |
+  |---|---|---|
+  | SSL embeddings, as is | 0.132 | 0.156 |
+  | SSL embeddings, standardised per room | 0.140 | 0.108 |
+  | handcrafted, `task3` preset | 0.124 | 0.079 |
+
+  The same probe scores 0.94 within either room, and 0.167 is the
+  single-class level. Across rooms the classifier collapses onto one or two
+  classes (e.g. all of Room A predicted STAND). Expect the transferred
+  shared-activity curve to sit near chance unless the adaptation does more
+  than rescale each room.
+- `src/task1_room.py` exposes `featurize()` and `evaluate()` but no fitted
+  router; the predicted-room arm has to fit its own (as `run_episode.py`'s
+  `write_predictions()` does).
 
 ## Contracts — frozen, do not edit in place
 
