@@ -230,13 +230,20 @@ def task2_probe_bars(cfg: config.Config) -> str:
         for bar, mean in zip(bars, means):
             ax.text(bar.get_x() + bar.get_width() / 2, mean + 0.02, f"{mean:.3f}",
                     ha="center", fontsize=9, fontweight="bold")
+        if evaluation == "cross_room_shared":
+            # Predicting one class for every window of 3 balanced classes.
+            ax.axhline(1 / 6, color="#c53030", ls="--", lw=1)
+            ax.annotate("single-class prediction = 0.167", xy=(len(order) - 0.6, 1 / 6),
+                        xytext=(len(order) - 0.6, 0.36), ha="right", fontsize=8,
+                        color="#c53030", arrowprops={"arrowstyle": "->", "color": "#c53030"})
         ax.set_xticks(range(len(order)), [names[r] for r in order], fontsize=8)
         ax.set_ylim(0, 1.08)
         ax.set_title(title, fontsize=10)
         ax.grid(axis="y", alpha=0.3)
     axes[0].set_ylabel("validation score")
     fig.suptitle("Task 2: frozen representations, linear probe on development, "
-                 "scored on validation (error bars: std over 3 seeds)", fontsize=11, y=1.02)
+                 "scored on validation (error bars: std over 3 seeds; handcrafted is deterministic)",
+                 fontsize=11, y=1.02)
     fig.tight_layout()
     path = cfg.path("figures") / "task2_probe.png"
     fig.savefig(path, dpi=150, bbox_inches="tight")
