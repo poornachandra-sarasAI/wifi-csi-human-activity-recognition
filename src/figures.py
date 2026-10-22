@@ -6,9 +6,11 @@ people are working in this file at once.
     room_accuracy_vs_window_length()   owner: ingestion / Task 1
     task1_ablation()                   owner: ingestion / Task 1
     label_efficiency_curve()           owner: Task 3   (not yet written)
-    encoder_umap()                     owner: Task 2   (not yet written)
+    encoder_umap()                     owner: Task 2
+    task2_probe_bars()                 owner: Task 2
 
 Run:  python -m src.figures
+      python -m src.figures --task2      # only the Task 2 figures
 """
 
 from __future__ import annotations
@@ -139,9 +141,115 @@ def task1_ablation(cfg: config.Config) -> str:
     return str(path)
 
 
+ROOM_COLORS = {"A": "#2b6cb0", "B": "#c05621"}
+ACTIVITY_COLORS = {
+    "SIT": "#2b6cb0", "STAND": "#2f855a", "WALK": "#c53030",
+    "SITDOWN": "#6b46c1", "STANDUP": "#b7791f", "FALL": "#000000",
+    "EMPTY": "#a0aec0", "LYING": "#d53f8c",
+}
+
+
+def encoder_umap(cfg: config.Config) -> str:
+    """Spec section 11: 2-D UMAP of the representations, by room and by activity.
+
+    Owner: Task 2. Qualitative only. UMAP is fitted on development windows,
+    unsupervised; labels are used for colour alone.
+    """
+    import umap
+    from sklearn.preprocessing import StandardScaler
+
+    from src import baselines, dataset, encoder, splits
+
+    dev = dataset.load(cfg["task2"]["normalize_preset"], splits.DEVELOPMENT, cfg)
+    rows = [
+        ("handcrafted features", baselines.handcrafted_features(dev.x)),
+        ("random-weight encoder",
+         encoder.embed(baselines.random_encoder(dev.x, cfg, seed=0), dev.x)),
+        ("SSL encoder (all augmentations)",
+         encoder.embed(encoder.load_pretrained(cfg, "full", 0), dev.x)),
+        ("SSL encoder (no adjacency-breaking aug.)",
+         encoder.embed(encoder.load_pretrained(cfg, "no_adjacency_break", 0), dev.x)),
+    ]
+
+    fig, axes = plt.subplots(len(rows), 2, figsize=(11, 4.6 * len(rows)))
+    for (title, z), (ax_room, ax_act) in zip(rows, axes):
+        xy = umap.UMAP(n_neighbors=30, min_dist=0.3, random_state=cfg["seed"]).fit_transform(
+            StandardScaler().fit_transform(z)
+        )
+        for ax, labels, palette in ((ax_room, dev.room, ROOM_COLORS),
+                                    (ax_act, dev.y, ACTIVITY_COLORS)):
+            for name, color in palette.items():
+                mask = labels == name
+                if mask.any():
+                    prefix = "Room " if palette is ROOM_COLORS else ""
+                    ax.scatter(*xy[mask].T, s=5, alpha=0.6, color=color,
+                               label=f"{prefix}{name}", rasterized=True)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.legend(fontsize=7, markerscale=2.5, loc="best", framealpha=0.9)
+        ax_room.set_ylabel(title, fontsize=10)
+    axes[0, 0].set_title("coloured by room")
+    axes[0, 1].set_title("coloured by activity")
+    fig.suptitle("Task 2: UMAP of development-window representations (qualitative)",
+                 fontsize=12, y=1.0)
+    fig.tight_layout()
+    path = cfg.path("figures") / "task2_umap.png"
+    fig.savefig(path, dpi=130, bbox_inches="tight")
+    plt.close(fig)
+    return str(path)
+
+
+def task2_probe_bars(cfg: config.Config) -> str:
+    """Linear-probe validation scores per representation, with seed spread.
+
+    Owner: Task 2.
+    """
+    per_seed = pd.read_csv(cfg.path("results") / "task2_probe_per_seed.csv")
+    order = ["handcrafted", "random", "ssl_no_adjacency_break", "ssl_full"]
+    names = {"handcrafted": "handcrafted", "random": "random-weight\nencoder",
+             "ssl_no_adjacency_break": "SSL, no adjacency-\nbreaking aug.",
+             "ssl_full": "SSL, all\naugmentations"}
+    colors = ["#718096", "#a0aec0", "#63b3ed", "#2b6cb0"]
+    panels = [
+        ("activity", "all", "macro_f1", "Activity, both rooms (8 classes)\nmacro-F1 - headline"),
+        ("activity", "all", "balanced_accuracy", "Activity, both rooms (8 classes)\nbalanced accuracy"),
+        ("cross_room_shared", None, "macro_f1",
+         "SIT/STAND/WALK across rooms\nmacro-F1, mean of both directions"),
+    ]
+
+    fig, axes = plt.subplots(1, len(panels), figsize=(15, 4.8))
+    for ax, (evaluation, room, metric, title) in zip(axes, panels):
+        rows = per_seed[(per_seed.evaluation == evaluation) & (per_seed.metric == metric)]
+        if room is not None:
+            rows = rows[rows.target_room == room]
+        # Average the two transfer directions within a seed, then spread over seeds.
+        by_seed = rows.groupby(["representation", "seed"])["value"].mean()
+        means = [by_seed[r].mean() for r in order]
+        stds = [by_seed[r].std(ddof=1) if len(by_seed[r]) > 1 else 0 for r in order]
+        bars = ax.bar(range(len(order)), means, yerr=stds, capsize=4, color=colors)
+        for bar, mean in zip(bars, means):
+            ax.text(bar.get_x() + bar.get_width() / 2, mean + 0.02, f"{mean:.3f}",
+                    ha="center", fontsize=9, fontweight="bold")
+        ax.set_xticks(range(len(order)), [names[r] for r in order], fontsize=8)
+        ax.set_ylim(0, 1.08)
+        ax.set_title(title, fontsize=10)
+        ax.grid(axis="y", alpha=0.3)
+    axes[0].set_ylabel("validation score")
+    fig.suptitle("Task 2: frozen representations, linear probe on development, "
+                 "scored on validation (error bars: std over 3 seeds)", fontsize=11, y=1.02)
+    fig.tight_layout()
+    path = cfg.path("figures") / "task2_probe.png"
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return str(path)
+
+
 def main() -> int:
     cfg = config.load()
-    for builder in (room_accuracy_vs_window_length, task1_ablation):
+    builders = [encoder_umap, task2_probe_bars]
+    if "--task2" not in sys.argv:
+        builders = [room_accuracy_vs_window_length, task1_ablation] + builders
+    for builder in builders:
         print(f"-> {builder(cfg)}")
     return 0
 
