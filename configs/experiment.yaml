@@ -209,7 +209,9 @@ task2:
     full: {}
     no_adjacency_break: {subsample_p: 0.0, local_shuffle_p: 0.0}
   probe:                          # src/task2_probe.py - frozen linear probe
-    c_grid: [0.001, 0.01, 0.1, 1.0, 10.0]
+    # 100 added after development CV put handcrafted features' best C at
+    # the old upper edge (10). Development-only evidence; see task2_probe.
+    c_grid: [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
     cv_folds: 5
     max_iter: 5000
 

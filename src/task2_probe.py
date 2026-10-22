@@ -78,7 +78,9 @@ def fit_probe(
         {"logisticregression__C": settings["c_grid"]},
         cv=folds,
         scoring="f1_macro",
-        n_jobs=-1,
+        # Serial on purpose: on Windows each worker process re-imports
+        # torch's CUDA libraries and exhausts the page file.
+        n_jobs=None,
     )
     search.fit(features, labels, groups=groups)
     return search
