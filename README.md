@@ -157,6 +157,59 @@ the ladder, not the headline.
 
 Figures: `figures/task1_accuracy_vs_window_length.png`, `figures/task1_ablation.png`.
 
+## Task 2: self-supervised representation
+
+A small 1-D temporal CNN (`src/encoder.py`, ~0.27 M parameters) is pretrained
+with SimCLR on the 2,010 development windows of **both rooms, with no labels**
+(`src/ssl_pretrain.py`). It is then frozen, a linear probe is fitted on
+labelled development windows, and the fixed validation windows are scored
+(`src/task2_probe.py`). The probe's `C` is chosen by capture-grouped 5-fold CV
+on development only. Encoders are reported as mean ± std over 3 seeds.
+
+```bash
+python -m src.ssl_pretrain            # 2 variants x 3 seeds -> models/*.pt  (~45 min, GTX 1650)
+python -m src.task2_probe             # probes -> results/task2_probe*.csv   (~4 min)
+python -m src.figures --task2         # figures/task2_umap.png, figures/task2_probe.png
+```
+
+Validation results (8-class activity probe over both rooms):
+
+| Representation | macro-F1 | balanced acc. | Room A macro-F1 | Room B macro-F1 |
+|---|---|---|---|---|
+| handcrafted features | 0.898 | 0.897 | 0.906 | 0.887 |
+| random-weight encoder | 0.637 ± 0.026 | 0.664 ± 0.019 | 0.519 ± 0.013 | 0.742 ± 0.045 |
+| **SSL, all augmentations** | **0.898 ± 0.008** | **0.906 ± 0.008** | 0.876 ± 0.020 | **0.933 ± 0.013** |
+| SSL, no adjacency-breaking aug. | 0.850 ± 0.003 | 0.856 ± 0.004 | 0.811 ± 0.020 | 0.900 ± 0.036 |
+
+Read it as:
+
+1. **Pretraining helps the encoder a lot** (+0.26 over the same architecture
+   with random weights) but **only matches handcrafted features overall**:
+   better in Room B, worse in Room A.
+2. **The interleaving ablation works.** Removing the two augmentations that
+   break strict temporal adjacency (stride-2 subsampling, local shuffle)
+   costs 0.048 macro-F1, more than five times the seed spread, and Room A
+   loses most of it. That variant also ends at a lower contrastive loss (1.63
+   vs 2.08, mean of 3 seeds): with the alternating frame streams intact, matching views is
+   easier and the encoder learns less about activity.
+3. **Nothing transfers across rooms.** A probe fitted on one room's
+   SIT/STAND/WALK and scored on the other's sits at the single-class level
+   (macro-F1 ≈ 0.17) for every representation. The `task2` preset keeps the
+   global amplitude level, so each room is out of distribution for the other.
+   Room identity is linearly perfect (1.000) in all four representations,
+   including handcrafted and random, so the room split in the UMAP comes from
+   the input, not from pretraining.
+4. **Caveat, qualitative.** In every representation, Room B's SIT and STAND
+   windows form an island apart from its EMPTY, LYING and WALK windows. That
+   looks like a recording-session effect inside Room B, which would flatter
+   Room B's scores.
+
+**For Task 3:** `from src.encoder import load_pretrained, embed`, then
+`embed(load_pretrained(cfg, "full", seed), x)` on `task2`-preset windows gives
+`(n, 128)` embeddings. Weights are gitignored; rebuild them with
+`python -m src.ssl_pretrain`. Because of point 3, normalize per room (inputs
+or embeddings) before transferring prototypes across rooms.
+
 ## Contracts — frozen, do not edit in place
 
 **`windows/manifest.csv`** is the only place room, activity, split and
@@ -215,5 +268,6 @@ src/                     flat modules, per challenge spec §5.6
 configs/experiment.yaml  every parameter that changes derived data
 tests/                   leakage and contract tests
 results/ figures/        committed: metrics, fitted stats, figures
+models/                  Task 2 encoder weights (*.pt, gitignored)
 report/                  technical report
 ```

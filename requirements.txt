@@ -6,3 +6,7 @@ pytest==9.1.1
 PyYAML==6.0.3
 scikit-learn==1.9.1
 scipy==1.18.1
+# Task 2. For a CUDA build install torch from the PyTorch index first, e.g.
+#   pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+torch==2.6.0
+umap-learn==0.5.12

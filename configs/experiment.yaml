@@ -176,6 +176,44 @@ task1:
 
 task2:
   normalize_preset: task2
+  # Every value below is fixed a priori. None is tuned on local_validation;
+  # the only data-driven choice is the probe's C, picked by cross-validation
+  # on development captures (src/task2_probe.py).
+  encoder:                        # src/encoder.py - small 1-D temporal CNN
+    reduce_channels: 64           # 1x1 conv over 256 subcarriers x 2 channels
+    hidden_channels: 128
+    kernel_size: 5
+    dilations: [1, 2, 4]
+    embed_dim: 128
+  pretrain:                       # src/ssl_pretrain.py - SimCLR, no labels
+    epochs: 200
+    batch_size: 128
+    lr: 0.001
+    weight_decay: 0.0001
+    temperature: 0.2
+    projection_dim: 64
+    seeds: [0, 1, 2]
+  augment:
+    crop_min_fraction: 0.6        # random temporal crop, resized back to 150
+    subsample_p: 0.5              # stride-2 subsampling, random phase
+    local_shuffle_p: 0.5          # permute observations within short spans
+    local_shuffle_span: 4
+    band_mask_p: 0.5              # zero one contiguous run of subcarriers
+    band_mask_max_width: 32
+    noise_std: 0.1
+    offset_std: 0.1               # per-subcarrier offset (a gain in log space)
+    reverse_p: 0.5
+  # Interleaving-artifact ablation (HANDOFF section 5): the two adjacency-
+  # breaking augmentations are switched off in the second variant.
+  variants:
+    full: {}
+    no_adjacency_break: {subsample_p: 0.0, local_shuffle_p: 0.0}
+  probe:                          # src/task2_probe.py - frozen linear probe
+    # 100 added after development CV put handcrafted features' best C at
+    # the old upper edge (10). Development-only evidence; see task2_probe.
+    c_grid: [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
+    cv_folds: 5
+    max_iter: 5000
 
 task3:
   normalize_preset: task3
