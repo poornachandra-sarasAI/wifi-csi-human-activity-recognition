@@ -102,8 +102,13 @@ representation. A room probe scores 1.000 for all four representations.
    cleanly by room. That separation comes from the input: the `task2` preset keeps the
    absolute amplitude level, which differs about 490× between our Room A decode and Room
    B's supplied values (see Task 1). It is not something pretraining discovered.
-   Consequently, activity probes do not transfer across rooms at all. This motivates the
-   per-room normalization that Task 3 uses.
+   Activity probes do not transfer across rooms at all. Per-room normalization does not
+   rescue them either: in a development-only check, a probe fitted on one room's
+   SIT/STAND/WALK and scored on the other's stays at 0.08–0.16 macro-F1 with per-room
+   standardised SSL embeddings, or with handcrafted features on the `task3` preset.
+   The same probe scores 0.94 within either room. The shared labels therefore do not
+   produce shared signals across these two recordings, which bounds what Task 3 can
+   transfer without target labels.
 4. **Possible session confound in Room B (qualitative).** In every representation,
    Room B's SIT and STAND windows form a cluster apart from its EMPTY, LYING and WALK
    windows. That pattern is consistent with those activities having been recorded in a
