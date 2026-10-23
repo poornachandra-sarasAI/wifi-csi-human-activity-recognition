@@ -33,6 +33,9 @@ venv/
 # Torch checkpoints
 *.pt
 *.pth
+# Task 2's trained encoders are small (1.1 MB each) and committed so Task 3
+# can call load_pretrained() without a 45-minute retrain.
+!models/task2_encoder_*.pt
 
 # Logs
 *.log

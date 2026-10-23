@@ -1,0 +1,46 @@
+development WindowSet(n=2010, shape=(150, 256, 2), preset='task2', rooms={'A': np.int64(934), 'B': np.int64(1076)})
+validation  WindowSet(n=275, shape=(150, 256, 2), preset='task2', rooms={'A': np.int64(150), 'B': np.int64(125)})
+
+  handcrafted                seed -1  dim  416  activity macro-F1 0.898  (58s)
+  random                     seed  0  dim  128  activity macro-F1 0.658  (18s)
+  random                     seed  1  dim  128  activity macro-F1 0.645  (19s)
+  random                     seed  2  dim  128  activity macro-F1 0.608  (18s)
+  ssl_full                   seed  0  dim  128  activity macro-F1 0.906  (8s)
+  ssl_full                   seed  1  dim  128  activity macro-F1 0.890  (9s)
+  ssl_full                   seed  2  dim  128  activity macro-F1 0.897  (9s)
+  ssl_no_adjacency_break     seed  0  dim  128  activity macro-F1 0.847  (11s)
+  ssl_no_adjacency_break     seed  1  dim  128  activity macro-F1 0.849  (12s)
+  ssl_no_adjacency_break     seed  2  dim  128  activity macro-F1 0.854  (12s)
+
+Validation results (mean +/- std over seeds):
+
+[activity]
+target_room                            A                                  B                                all                 
+metric                 balanced_accuracy         macro_f1 balanced_accuracy         macro_f1 balanced_accuracy         macro_f1
+representation                                                                                                                 
+handcrafted              0.907 +/- 0.000  0.906 +/- 0.000   0.888 +/- 0.000  0.887 +/- 0.000   0.897 +/- 0.000  0.898 +/- 0.000
+random                   0.529 +/- 0.010  0.519 +/- 0.013   0.747 +/- 0.044  0.742 +/- 0.045   0.664 +/- 0.019  0.637 +/- 0.026
+ssl_full                 0.876 +/- 0.020  0.876 +/- 0.020   0.933 +/- 0.012  0.933 +/- 0.013   0.906 +/- 0.008  0.898 +/- 0.008
+ssl_no_adjacency_break   0.811 +/- 0.020  0.811 +/- 0.020   0.901 +/- 0.036  0.900 +/- 0.036   0.856 +/- 0.004  0.850 +/- 0.003 
+
+[cross_room_shared]
+target_room                            A                                  B                 
+metric                 balanced_accuracy         macro_f1 balanced_accuracy         macro_f1
+representation                                                                              
+handcrafted              0.333 +/- 0.000  0.167 +/- 0.000   0.333 +/- 0.000  0.167 +/- 0.000
+random                   0.311 +/- 0.038  0.159 +/- 0.013   0.333 +/- 0.000  0.174 +/- 0.012
+ssl_full                 0.249 +/- 0.076  0.150 +/- 0.038   0.307 +/- 0.035  0.189 +/- 0.021
+ssl_no_adjacency_break   0.342 +/- 0.015  0.239 +/- 0.072   0.173 +/- 0.096  0.126 +/- 0.042 
+
+[room]
+target_room                          all                 
+metric                 balanced_accuracy         macro_f1
+representation                                           
+handcrafted              1.000 +/- 0.000  1.000 +/- 0.000
+random                   1.000 +/- 0.000  1.000 +/- 0.000
+ssl_full                 1.000 +/- 0.000  1.000 +/- 0.000
+ssl_no_adjacency_break   1.000 +/- 0.000  1.000 +/- 0.000 
+
+-> C:\Users\heman\OneDrive\Documents\UC2\wifi-csi-human-activity-recognition\results\task2_probe.csv
+-> C:\Users\heman\OneDrive\Documents\UC2\wifi-csi-human-activity-recognition\results\task2_probe_per_seed.csv
+exit=0

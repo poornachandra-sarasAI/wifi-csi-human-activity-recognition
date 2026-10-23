@@ -1,0 +1,87 @@
+config_version 2   config_hash 2a323eeb9765
+
+================================================================
+1/5  Ingest Room A (.pcap -> amplitude)
+================================================================
+1084 captures in 256.2s
+
+================================================================
+2/5  Ingest Room B (.csv -> amplitude)
+================================================================
+1201 captures in 411.8s
+
+================================================================
+3/5  Capture-level splits
+================================================================
+split  development  local_validation
+room                                
+A              934               150
+B             1076               125
+
+================================================================
+4/5  Windowing (150 x 256)
+================================================================
+2285 windows written
+
+================================================================
+5/5  Normalization (fitted on development only)
+================================================================
+  task1          -> norm_task1.npz
+  task1_subband  -> norm_task1_subband.npz
+  task1_honest   -> norm_task1_honest.npz
+  task2          -> norm_task2.npz
+  task3          -> norm_task3.npz
+
+================================================================
+Task 1  Recorded-environment identification
+================================================================
+
+=== task1 ===
+  confusion at length 150 (rows true A,B):
+[[150   0]
+ [  0 125]]
+ window_length  value
+             1    1.0
+            10    1.0
+            25    1.0
+            50    1.0
+           100    1.0
+           150    1.0
+
+=== task1_subband ===
+  confusion at length 150 (rows true A,B):
+[[150   0]
+ [  0 125]]
+ window_length    value
+             1 0.996364
+            10 1.000000
+            25 1.000000
+            50 1.000000
+           100 1.000000
+           150 1.000000
+
+=== task1_honest ===
+  confusion at length 150 (rows true A,B):
+[[149   1]
+ [  1 124]]
+ window_length    value
+             1 0.876364
+            10 0.992727
+            25 0.996364
+            50 0.996364
+           100 0.996364
+           150 0.992727
+
+Headline (official 150-observation validation windows):
+  task1          accuracy = 1.0000
+  task1_subband  accuracy = 1.0000
+  task1_honest   accuracy = 0.9927
+
+-> C:\Users\heman\OneDrive\Documents\UC2\wifi-csi-human-activity-recognition\results\task1_room_accuracy.csv
+
+================================================================
+Predictions
+================================================================
+275 predictions -> C:\Users\heman\OneDrive\Documents\UC2\wifi-csi-human-activity-recognition\results\predictions.csv
+
+Done.

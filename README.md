@@ -170,7 +170,12 @@ on development only. Encoders are reported as mean ± std over 3 seeds.
 python -m src.ssl_pretrain            # 2 variants x 3 seeds -> models/*.pt  (~45 min, GTX 1650)
 python -m src.task2_probe             # probes -> results/task2_probe*.csv   (~4 min)
 python -m src.figures --task2         # figures/task2_umap.png, figures/task2_probe.png
+python -m src.task2_transfer_check    # development-only cross-room check (table below)
 ```
+
+Setting up from the raw archive on a new machine: see `docs/setup_notes.md`.
+It covers a duplicate capture in the archive that silently shifts every
+`window_id`.
 
 Validation results (8-class activity probe over both rooms):
 
@@ -206,7 +211,8 @@ Read it as:
 
 **For Task 3:** `from src.encoder import load_pretrained, embed`, then
 `embed(load_pretrained(cfg, "full", seed), x)` gives `(n, 128)` embeddings.
-Weights are gitignored; rebuild them with `python -m src.ssl_pretrain`.
+The six trained encoders are committed in `models/` (1.1 MB each), so this
+works straight after cloning; `python -m src.ssl_pretrain` rebuilds them.
 Three things to know first:
 
 - `embed()` takes **`task2`-preset** windows `(n, 150, 256, 2)`. The `task3`
@@ -289,6 +295,7 @@ src/                     flat modules, per challenge spec §5.6
 configs/experiment.yaml  every parameter that changes derived data
 tests/                   leakage and contract tests
 results/ figures/        committed: metrics, fitted stats, figures
-models/                  Task 2 encoder weights (*.pt, gitignored)
+models/                  Task 2 trained encoders (committed, 6 x 1.1 MB)
+docs/                    setup notes, Task 2 plan, run logs
 report/                  technical report
 ```

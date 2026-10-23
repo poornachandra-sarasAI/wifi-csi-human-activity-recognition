@@ -1,0 +1,88 @@
+pretraining on 2010 development windows, shape (150, 256, 2), device cuda
+
+  variant=full seed=0
+    epoch    1/200  loss 4.3852  (4s)
+    epoch   20/200  loss 2.9072  (44s)
+    epoch   40/200  loss 2.5621  (112s)
+    epoch   60/200  loss 2.3875  (153s)
+    epoch   80/200  loss 2.2897  (233s)
+    epoch  100/200  loss 2.2205  (291s)
+    epoch  120/200  loss 2.1713  (334s)
+    epoch  140/200  loss 2.1308  (376s)
+    epoch  160/200  loss 2.1098  (418s)
+    epoch  180/200  loss 2.1269  (459s)
+    epoch  200/200  loss 2.0868  (503s)
+    -> models\task2_encoder_full_seed0.pt
+
+  variant=full seed=1
+    epoch    1/200  loss 4.2978  (3s)
+    epoch   20/200  loss 2.7825  (44s)
+    epoch   40/200  loss 2.4906  (87s)
+    epoch   60/200  loss 2.4261  (130s)
+    epoch   80/200  loss 2.3561  (174s)
+    epoch  100/200  loss 2.2269  (216s)
+    epoch  120/200  loss 2.1869  (261s)
+    epoch  140/200  loss 2.1666  (304s)
+    epoch  160/200  loss 2.1080  (347s)
+    epoch  180/200  loss 2.1144  (390s)
+    epoch  200/200  loss 2.0870  (434s)
+    -> models\task2_encoder_full_seed1.pt
+
+  variant=full seed=2
+    epoch    1/200  loss 4.3774  (2s)
+    epoch   20/200  loss 2.8135  (43s)
+    epoch   40/200  loss 2.5365  (86s)
+    epoch   60/200  loss 2.3904  (130s)
+    epoch   80/200  loss 2.2742  (173s)
+    epoch  100/200  loss 2.2378  (217s)
+    epoch  120/200  loss 2.1514  (261s)
+    epoch  140/200  loss 2.1110  (305s)
+    epoch  160/200  loss 2.1119  (349s)
+    epoch  180/200  loss 2.0800  (393s)
+    epoch  200/200  loss 2.0561  (436s)
+    -> models\task2_encoder_full_seed2.pt
+
+  variant=no_adjacency_break seed=0
+    epoch    1/200  loss 4.3795  (2s)
+    epoch   20/200  loss 2.3144  (45s)
+    epoch   40/200  loss 2.0323  (88s)
+    epoch   60/200  loss 1.8515  (131s)
+    epoch   80/200  loss 1.7986  (175s)
+    epoch  100/200  loss 1.7387  (218s)
+    epoch  120/200  loss 1.7098  (262s)
+    epoch  140/200  loss 1.6648  (305s)
+    epoch  160/200  loss 1.6396  (349s)
+    epoch  180/200  loss 1.6415  (392s)
+    epoch  200/200  loss 1.6452  (435s)
+    -> models\task2_encoder_no_adjacency_break_seed0.pt
+
+  variant=no_adjacency_break seed=1
+    epoch    1/200  loss 4.2801  (2s)
+    epoch   20/200  loss 2.2676  (44s)
+    epoch   40/200  loss 2.0036  (89s)
+    epoch   60/200  loss 1.9055  (133s)
+    epoch   80/200  loss 1.8242  (176s)
+    epoch  100/200  loss 1.7560  (220s)
+    epoch  120/200  loss 1.7130  (264s)
+    epoch  140/200  loss 1.6852  (307s)
+    epoch  160/200  loss 1.6326  (351s)
+    epoch  180/200  loss 1.6615  (394s)
+    epoch  200/200  loss 1.6402  (438s)
+    -> models\task2_encoder_no_adjacency_break_seed1.pt
+
+  variant=no_adjacency_break seed=2
+    epoch    1/200  loss 4.3391  (2s)
+    epoch   20/200  loss 2.2473  (43s)
+    epoch   40/200  loss 1.9904  (87s)
+    epoch   60/200  loss 1.8749  (130s)
+    epoch   80/200  loss 1.8023  (173s)
+    epoch  100/200  loss 1.7410  (217s)
+    epoch  120/200  loss 1.6756  (260s)
+    epoch  140/200  loss 1.6612  (304s)
+    epoch  160/200  loss 1.6529  (347s)
+    epoch  180/200  loss 1.6234  (391s)
+    epoch  200/200  loss 1.6164  (434s)
+    -> models\task2_encoder_no_adjacency_break_seed2.pt
+
+loss curves -> C:\Users\heman\OneDrive\Documents\UC2\wifi-csi-human-activity-recognition\results\task2_pretrain_loss.csv
+exit=0
