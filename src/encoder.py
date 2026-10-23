@@ -149,7 +149,8 @@ def load_pretrained(
 ) -> nn.Module:
     """Encoder with self-supervised weights, in eval mode.
 
-    Weights are gitignored (*.pt); build them with `python -m src.ssl_pretrain`.
+    The trained weights are committed in models/; `python -m src.ssl_pretrain`
+    rebuilds them.
     """
     path = checkpoint_path(variant, seed)
     if not path.exists():

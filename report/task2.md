@@ -128,7 +128,7 @@ representation. A room probe scores 1.000 for all four representations.
 ## Reproduce
 
 ```bash
-python -m src.ssl_pretrain      # ~45 min on a GTX 1650; weights -> models/ (gitignored)
+python -m src.ssl_pretrain      # ~45 min on a GTX 1650; weights -> models/ (committed)
 python -m src.task2_probe       # ~4 min
 python -m src.figures --task2
 python -m pytest tests/ -q
