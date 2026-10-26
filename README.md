@@ -237,6 +237,42 @@ Three things to know first:
   router; the predicted-room arm has to fit its own (as `run_episode.py`'s
   `write_predictions()` does).
 
+## Task 3: cross-room few-label adaptation
+
+Frozen Task 2 embeddings are z-scored per room (no labels), then classified by
+nearest class prototype (`src/fewshot.py`). Shared SIT/STAND/WALK prototypes come
+from the source room's labels, and target-exclusive prototypes from K labelled
+target captures. The `refined` variant moves the prototypes with soft k-means
+over unlabelled target development windows. Support is drawn at capture level
+from target development only, 10 seeded draws × 3 encoder seeds per K
+(`src/task3_adapt.py`).
+
+```bash
+python -m src.task3_adapt          # ~5 min on CPU -> results/task3*.csv
+python -m src.figures --task3      # label efficiency, K=5 confusion, routing ablation
+```
+
+Validation, K = 5, oracle routing, SSL + prototypes (mean ± std over 30 runs):
+
+| Target | all activities | target-exclusive | transferred shared |
+|---|---|---|---|
+| Room A | 0.215 ± 0.033 | 0.418 ± 0.066 | 0.011 ± 0.019 |
+| Room B | 0.277 ± 0.025 | 0.623 ± 0.054 | 0.046 ± 0.037 |
+
+1. **The shared activities do not transfer**, at any K, with any representation
+   or routing. The confusion matrices show source prototypes landing on the wrong
+   target clusters (Room B: 98 % of SIT predicted WALK), not noise.
+2. **The few target labels work.** Target-exclusive macro-F1 rises from K = 1 to
+   20 (Room B 0.42 → 0.68), but it is capped because untransferred shared windows
+   are absorbed into the exclusive classes.
+3. **Routing is free.** Predicted routing (Task 1 router, 0.9927) matches oracle
+   to within 0.003. Dropping routing costs up to 0.074.
+4. **Refinement helps handcrafted features** (Room B 0.139 → 0.346, the only
+   above-chance shared transfer) **and hurts SSL embeddings.** It was chosen as
+   the proposed method before seeing validation, and we report it as is.
+
+Full write-up: `report/task3.md`.
+
 ## Contracts — frozen, do not edit in place
 
 **`windows/manifest.csv`** is the only place room, activity, split and

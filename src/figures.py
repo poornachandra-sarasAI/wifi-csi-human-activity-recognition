@@ -5,12 +5,15 @@ people are working in this file at once.
 
     room_accuracy_vs_window_length()   owner: ingestion / Task 1
     task1_ablation()                   owner: ingestion / Task 1
-    label_efficiency_curve()           owner: Task 3   (not yet written)
     encoder_umap()                     owner: Task 2
     task2_probe_bars()                 owner: Task 2
+    label_efficiency_curve()           owner: Task 3
+    task3_confusion()                  owner: Task 3
+    task3_routing()                    owner: Task 3
 
 Run:  python -m src.figures
       python -m src.figures --task2      # only the Task 2 figures
+      python -m src.figures --task3      # only the Task 3 figures
 """
 
 from __future__ import annotations
@@ -251,11 +254,147 @@ def task2_probe_bars(cfg: config.Config) -> str:
     return str(path)
 
 
+TASK3_LINES = [  # (representation, method, colour, label)
+    ("ssl_full", "refined", "#2b6cb0", "SSL + refined prototypes"),
+    ("ssl_full", "prototype", "#63b3ed", "SSL + prototypes"),
+    ("handcrafted", "refined", "#718096", "handcrafted + refined prototypes"),
+]
+
+
+def _task3_runs(cfg: config.Config) -> pd.DataFrame:
+    return pd.read_csv(cfg.path("results") / "task3_per_run.csv")
+
+
+def label_efficiency_curve(cfg: config.Config) -> str:
+    """Spec section 11: macro-F1 vs K per target room, oracle routing.
+
+    Owner: Task 3. Solid lines are the K-labelled target-exclusive activities,
+    dashed lines the shared activities transferred with no target labels.
+    Bands: std over encoder seeds x support draws.
+    """
+    runs = _task3_runs(cfg).query("routing == 'oracle'")
+    ks = sorted(runs.K.unique())
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5), sharey=True)
+    for ax, target in zip(axes, ("A", "B")):
+        for representation, method, color, label in TASK3_LINES:
+            rows = runs[(runs.target_room == target) & (runs.representation == representation)
+                        & (runs.method == method)]
+            for metric, style, suffix in (("target_exclusive_macro_f1", "-", "target-labelled"),
+                                          ("shared_macro_f1", "--", "transferred shared")):
+                stats = rows[rows.metric == metric].groupby("K")["value"].agg(["mean", "std"])
+                ax.plot(stats.index, stats["mean"], style, marker="o", color=color, lw=1.8,
+                        ms=5, label=f"{label}, {suffix}")
+                ax.fill_between(stats.index, stats["mean"] - stats["std"],
+                                stats["mean"] + stats["std"], color=color, alpha=0.12)
+        ax.set_xscale("log")
+        ax.set_xticks(ks)
+        ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+        ax.set_xlabel("K (labelled target captures per target-exclusive activity)")
+        ax.set_ylim(0, 1.02)
+        ax.grid(alpha=0.3)
+        ax.set_title(f"target Room {target}  (source Room {'B' if target == 'A' else 'A'})")
+    axes[0].set_ylabel("macro-F1 (validation)")
+    fig.suptitle("Task 3: label efficiency, oracle routing "
+                 "(bands: std over 3 encoder seeds x 10 support draws)", fontsize=11.5)
+    fig.tight_layout()
+    fig.legend(*axes[0].get_legend_handles_labels(), loc="upper center",
+               bbox_to_anchor=(0.5, 0.0), ncol=3, fontsize=8, frameon=False)
+    path = cfg.path("figures") / "task3_label_efficiency.png"
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return str(path)
+
+
+def task3_confusion(cfg: config.Config) -> str:
+    """Spec section 11: confusion matrix per target room at K = 5.
+
+    Owner: Task 3. SSL + refined prototypes, oracle routing, counts summed over
+    encoder seeds and support draws and shown row-normalised. Row labels carry
+    each activity's precision / recall / F1.
+    """
+    results = cfg.path("results")
+    matrix = pd.read_csv(results / "task3_confusion_K5.csv")
+    per_activity = pd.read_csv(results / "task3_per_activity_K5.csv")
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5.6), width_ratios=[7, 6])
+    for ax, target in zip(axes, ("A", "B")):
+        rows = matrix[matrix.target_room == target]
+        true = list(dict.fromkeys(rows.true))
+        predicted = list(dict.fromkeys(rows.predicted))
+        counts = rows.pivot(index="true", columns="predicted", values="count")
+        counts = counts.loc[true, predicted].to_numpy(dtype=float)
+        share = counts / counts.sum(axis=1, keepdims=True)
+        ax.imshow(share, cmap="Blues", vmin=0, vmax=1)
+        for i in range(share.shape[0]):
+            for j in range(share.shape[1]):
+                ax.text(j, i, f"{share[i, j]:.2f}", ha="center", va="center", fontsize=8,
+                        color="#fff" if share[i, j] > 0.55 else "#222")
+        scores = per_activity[per_activity.target_room == target].set_index("activity")
+        ax.set_yticks(range(len(true)), [
+            f"{a}  P{scores.loc[a, 'precision']:.2f} R{scores.loc[a, 'recall']:.2f} "
+            f"F1 {scores.loc[a, 'f1']:.2f}" for a in true], fontsize=8)
+        ax.set_xticks(range(len(predicted)), predicted, rotation=30, ha="right", fontsize=8)
+        ax.set_xlabel("predicted")
+        ax.set_title(f"target Room {target}")
+    fig.suptitle("Task 3: confusion at K = 5, SSL + refined prototypes, oracle routing\n"
+                 "row-normalised, summed over 3 encoder seeds x 10 support draws",
+                 fontsize=11)
+    fig.tight_layout()
+    path = cfg.path("figures") / "task3_confusion_K5.png"
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return str(path)
+
+
+def task3_routing(cfg: config.Config) -> str:
+    """Routing ablation: predicted-room vs oracle-room vs no routing, at K = 5.
+
+    Owner: Task 3. SSL + refined prototypes. Error bars: std over encoder
+    seeds x support draws.
+    """
+    runs = _task3_runs(cfg).query(
+        "K == 5 and representation == 'ssl_full' and method == 'refined'")
+    routings = [("oracle", "#2f855a"), ("predicted", "#2b6cb0"), ("none", "#c53030")]
+    metrics = [("macro_f1", "all activities"),
+               ("target_exclusive_macro_f1", "target-exclusive"),
+               ("shared_macro_f1", "transferred shared")]
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.8), sharey=True)
+    for ax, target in zip(axes, ("A", "B")):
+        width = 0.26
+        for i, (routing, color) in enumerate(routings):
+            stats = [runs[(runs.target_room == target) & (runs.routing == routing)
+                          & (runs.metric == m)]["value"] for m, _ in metrics]
+            x = np.arange(len(metrics)) + (i - 1) * width
+            means = [s.mean() for s in stats]
+            ax.bar(x, means, width, yerr=[s.std() for s in stats], capsize=3,
+                   color=color, label=f"{routing} routing")
+            for xi, mean in zip(x, means):
+                ax.text(xi, mean + 0.03, f"{mean:.2f}", ha="center", fontsize=7.5)
+        ax.set_xticks(range(len(metrics)), [label for _, label in metrics])
+        ax.set_ylim(0, 1.08)
+        ax.grid(axis="y", alpha=0.3)
+        ax.set_title(f"target Room {target}")
+    axes[0].set_ylabel("macro-F1 (validation)")
+    axes[1].legend(fontsize=8)
+    fig.suptitle("Task 3 routing ablation at K = 5 (SSL + refined prototypes)", fontsize=11.5)
+    fig.tight_layout()
+    path = cfg.path("figures") / "task3_routing.png"
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return str(path)
+
+
 def main() -> int:
     cfg = config.load()
-    builders = [encoder_umap, task2_probe_bars]
-    if "--task2" not in sys.argv:
-        builders = [room_accuracy_vs_window_length, task1_ablation] + builders
+    task2 = [encoder_umap, task2_probe_bars]
+    task3 = [label_efficiency_curve, task3_confusion, task3_routing]
+    if "--task2" in sys.argv:
+        builders = task2
+    elif "--task3" in sys.argv:
+        builders = task3
+    else:
+        builders = [room_accuracy_vs_window_length, task1_ablation] + task2 + task3
     for builder in builders:
         print(f"-> {builder(cfg)}")
     return 0

@@ -223,5 +223,11 @@ task3:
   target_exclusive:
     room_a: [SITDOWN, STANDUP, FALL]
     room_b: [EMPTY, LYING]
+  # src/task3_adapt.py. Fixed a priori; none is tuned on local_validation.
+  encoder_variant: full           # Task 2 encoder, every pretraining seed
+  support_draws: 10               # seeded support draws per encoder seed and K
+  temperature: 0.1                # cosine-similarity softmax, prediction + refinement
+  refine_iterations: 10           # soft k-means steps on unlabelled dev windows
+  router_preset: task1_honest     # HANDOFF section 7: route with Task 1's honest preset
 
 seed: 42
