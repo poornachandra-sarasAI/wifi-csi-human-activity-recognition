@@ -161,6 +161,21 @@ normalize:
       align: none
       scope: global
       subband_neutralize: null
+    task2_level_free:             # task2 with absolute amplitude removed
+      # `global` scope PRESERVES absolute level, so Room B's WALK batch
+      # (mean amplitude 473 vs 304-358 for every other Room B activity,
+      # and the only activity whose files lack the _Amp_ infix) carries a
+      # ~50% offset straight into the prototypes. A single scalar - the
+      # capture's mean amplitude - separates it at ROC-AUC 0.898.
+      # RoomScaler cannot remove this: it is a per-CLASS difference inside
+      # one room, and RoomScaler standardises per room.
+      # per_window_scalar divides each window by its own level, which kills
+      # the shortcut and the ~490x inter-room gap while keeping the
+      # per-subcarrier shape that the two_channel split needs.
+      detrend: two_channel
+      align: none
+      scope: per_window_scalar
+      subband_neutralize: null
     task3:                        # cross-room transfer - remove the room
       detrend: per_window
       align: per_room
@@ -175,7 +190,7 @@ task1:
   window_length_sweep: [1, 10, 25, 50, 100, 150]   # spec section 11 figure
 
 task2:
-  normalize_preset: task2
+  normalize_preset: task2_level_free
   # Every value below is fixed a priori. None is tuned on local_validation;
   # the only data-driven choice is the probe's C, picked by cross-validation
   # on development captures (src/task2_probe.py).

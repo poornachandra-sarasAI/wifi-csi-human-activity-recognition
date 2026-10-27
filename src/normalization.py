@@ -124,6 +124,25 @@ def _pre(window: np.ndarray, log1p: bool, subband: int | None) -> np.ndarray:
     return out
 
 
+def _scalar_center_scale(values: np.ndarray, robust: bool) -> tuple[float, float]:
+    """One location and spread for a whole window, pooled over everything.
+
+    Used by the `per_window_scalar` scope. Room B's WALK captures sit about
+    50% above every other Room B activity in mean amplitude - a recording
+    batch difference, not activity physics - and a single scalar divisor
+    removes that offset without touching the spectral shape that carries
+    the activity signal.
+    """
+    if robust:
+        center = float(np.median(values))
+        q75, q25 = np.percentile(values, [75, 25])
+        scale = float(q75 - q25)
+    else:
+        center = float(values.mean())
+        scale = float(values.std())
+    return center, max(scale, EPS)
+
+
 def _center_scale(values: np.ndarray, robust: bool) -> tuple[np.ndarray, np.ndarray]:
     """Per-subcarrier location and spread."""
     if robust:
@@ -150,7 +169,7 @@ def fit(
     log1p, robust = settings["log1p"], settings["robust"]
 
     stats = Stats(scope=scope, log1p=log1p, robust=robust, subband=subband)
-    if scope == "per_window":
+    if scope in ("per_window", "per_window_scalar"):
         # Nothing to fit: a per-window transform is a deterministic
         # function of the sample itself and so is leakage-free.
         return stats
@@ -196,6 +215,13 @@ def apply(
 
     if stats.scope == "per_window":
         center, scale = _center_scale(out, stats.robust)
+    elif stats.scope == "per_window_scalar":
+        # One scalar location and spread for the whole window, so the
+        # window's absolute amplitude level is removed while the
+        # per-subcarrier spectral SHAPE is preserved. `per_window` above
+        # standardises each subcarrier separately and therefore destroys
+        # that shape, which also collapses the two_channel split.
+        center, scale = _scalar_center_scale(out, stats.robust)
     else:
         key = "all" if stats.scope == "global" else room
         if key not in stats.center:
