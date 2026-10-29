@@ -252,24 +252,27 @@ python -m src.task3_adapt          # ~5 min on CPU -> results/task3*.csv
 python -m src.figures --task3      # label efficiency, K=5 confusion, routing ablation
 ```
 
-Validation, K = 5, oracle routing, SSL + prototypes (mean ± std over 30 runs):
+Validation, K = 5, oracle routing, SSL + prototypes (mean ± std over 30 runs),
+using encoders retrained on the `task2_level_free` preset:
 
 | Target | all activities | target-exclusive | transferred shared |
 |---|---|---|---|
-| Room A | 0.215 ± 0.033 | 0.418 ± 0.066 | 0.011 ± 0.019 |
-| Room B | 0.277 ± 0.025 | 0.623 ± 0.054 | 0.046 ± 0.037 |
+| Room A | 0.240 ± 0.043 | 0.390 ± 0.075 | 0.090 ± 0.042 |
+| Room B | 0.337 ± 0.068 | 0.525 ± 0.077 | 0.211 ± 0.082 |
 
-1. **The shared activities do not transfer**, at any K, with any representation
-   or routing. The confusion matrices show source prototypes landing on the wrong
-   target clusters (Room B: 98 % of SIT predicted WALK), not noise.
+1. **The shared activities still do not transfer.** Removing the Room B WALK
+   loudness shortcut lifts Room B shared F1 from 0.046 to 0.211, which is about
+   chance (0.20). The oracle Hungarian map still swaps SIT ↔ WALK in Room B, and
+   49 % of SIT windows are predicted WALK.
 2. **The few target labels work.** Target-exclusive macro-F1 rises from K = 1 to
-   20 (Room B 0.42 → 0.68), but it is capped because untransferred shared windows
-   are absorbed into the exclusive classes.
+   20 (Room A 0.32 → 0.51, Room B 0.39 → 0.59), but it is capped because
+   untransferred shared windows are absorbed into the exclusive classes.
 3. **Routing is free.** Predicted routing (Task 1 router, 0.9927) matches oracle
-   to within 0.003. Dropping routing costs up to 0.074.
-4. **Refinement helps handcrafted features** (Room B 0.139 → 0.346, the only
-   above-chance shared transfer) **and hurts SSL embeddings.** It was chosen as
-   the proposed method before seeing validation, and we report it as is.
+   to within 0.006. Dropping routing costs up to 0.142.
+4. **Refinement does not help.** It trades exclusive F1 for shared F1 with SSL
+   features and is worse everywhere with handcrafted features. The earlier
+   handcrafted Room B "transfer" (shared 0.236) is **retracted**: it was the
+   amplitude shortcut, and it falls to 0.038 on level-free features.
 
 Full write-up: `report/task3.md`.
 
