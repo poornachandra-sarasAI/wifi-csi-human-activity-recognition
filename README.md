@@ -253,24 +253,24 @@ python -m src.figures --task3      # label efficiency, K=5 confusion, routing ab
 ```
 
 Validation, K = 5, oracle routing, SSL + prototypes (mean ± std over 30 runs),
-using encoders retrained on the `task2_level_free` preset:
+using encoders retrained on the `task2_notched` preset (level-free plus Nyquist notch):
 
 | Target | all activities | target-exclusive | transferred shared |
 |---|---|---|---|
-| Room A | 0.240 ± 0.043 | 0.390 ± 0.075 | 0.090 ± 0.042 |
-| Room B | 0.337 ± 0.068 | 0.525 ± 0.077 | 0.211 ± 0.082 |
+| Room A | 0.211 ± 0.031 | 0.358 ± 0.060 | 0.065 ± 0.030 |
+| Room B | 0.326 ± 0.044 | 0.509 ± 0.072 | 0.205 ± 0.049 |
 
-1. **The shared activities still do not transfer.** Removing the Room B WALK
-   loudness shortcut lifts Room B shared F1 from 0.046 to 0.211, which is about
-   chance (0.20). The oracle Hungarian map still swaps SIT ↔ WALK in Room B, and
-   49 % of SIT windows are predicted WALK.
+1. **The shared activities do not transfer, and this is a verified negative
+   result.** We removed the two artifacts that could explain it, the Room B WALK
+   loudness offset (fix 1) and Room A's frame interleaving (fix 2). Room B shared
+   F1 stays at chance (0.20) and Room A's below it. The Room B swap moved from
+   SIT ↔ WALK to STAND ↔ WALK but did not go away.
 2. **The few target labels work.** Target-exclusive macro-F1 rises from K = 1 to
-   20 (Room A 0.32 → 0.51, Room B 0.39 → 0.59), but it is capped because
-   untransferred shared windows are absorbed into the exclusive classes.
+   20 (Room A 0.29 → 0.41, Room B 0.38 → 0.59), capped because untransferred
+   shared windows are absorbed into the exclusive classes.
 3. **Routing is free.** Predicted routing (Task 1 router, 0.9927) matches oracle
-   to within 0.006. Dropping routing costs up to 0.142.
-4. **Refinement does not help.** It trades exclusive F1 for shared F1 with SSL
-   features and is worse everywhere with handcrafted features. The earlier
+   to within 0.001. Dropping routing costs up to 0.095.
+4. **Refinement does not help**, with either representation. The earlier
    handcrafted Room B "transfer" (shared 0.236) is **retracted**: it was the
    amplitude shortcut, and it falls to 0.038 on level-free features.
 
