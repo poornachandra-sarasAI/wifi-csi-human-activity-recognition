@@ -114,13 +114,33 @@ def neutralize_subbands(window: np.ndarray, n_bands: int) -> np.ndarray:
     return out
 
 
-def _pre(window: np.ndarray, log1p: bool, subband: int | None) -> np.ndarray:
+def notch_nyquist(window: np.ndarray) -> np.ndarray:
+    """Remove each subcarrier's period-2 (Nyquist) component over time.
+
+    Room A's two interleaved frame streams make consecutive frames alternate,
+    which puts 40% of the temporal power of Room A's dynamic channel in the
+    Nyquist bin (Room B: 1.3%). That
+    alternation is a property of the capture pipeline, not of the activity.
+    Projecting out (-1)^t uses only the window's own samples, so nothing is
+    fitted and it applies to both rooms alike.
+    """
+    out = np.asarray(window, dtype=np.float32).copy()
+    sign = np.where(np.arange(len(out)) % 2, -1.0, 1.0).astype(np.float32)
+    sign = sign.reshape(-1, *([1] * (out.ndim - 1)))
+    out -= sign * (sign * out).mean(axis=0, keepdims=True)
+    return out
+
+
+def _pre(window: np.ndarray, log1p: bool, subband: int | None,
+         notch: bool = False) -> np.ndarray:
     """Preprocessing applied identically when fitting and when applying."""
     out = np.asarray(window, dtype=np.float32)
     if log1p:
         out = np.log1p(out)
     if subband:
         out = neutralize_subbands(out, subband)
+    if notch:
+        out = notch_nyquist(out)
     return out
 
 
@@ -190,7 +210,7 @@ def fit(
         stacked = []
         for row in rows.itertuples(index=False):
             window = np.load(cfg.path("windows") / row.split / f"{row.window_id}.npy")
-            stacked.append(_pre(window, log1p, subband))
+            stacked.append(_pre(window, log1p, subband, preset_cfg.get("nyquist_notch", False)))
             used.append(row.capture_id)
         pooled = np.concatenate(stacked, axis=0)
         stats.center[key], stats.scale[key] = _center_scale(pooled, robust)
@@ -206,7 +226,7 @@ def apply(
     room: str | None = None,
 ) -> np.ndarray:
     """Apply a fitted preset to one (150, 256) window."""
-    out = _pre(window, stats.log1p, stats.subband)
+    out = _pre(window, stats.log1p, stats.subband, preset_cfg.get("nyquist_notch", False))
 
     detrend = preset_cfg["detrend"]
     static = None

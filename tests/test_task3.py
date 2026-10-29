@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from src import fewshot
+from src import fewshot, normalization
 
 rng = np.random.default_rng(0)
 
@@ -66,3 +66,12 @@ def test_refine_moves_a_shifted_prototype_onto_its_cluster():
     target = centres[0] / np.linalg.norm(centres[0])
     assert refined[0] @ target > shifted[0] @ target
     assert refined[0] @ target > 0.99
+
+
+def test_nyquist_notch_removes_only_the_period_2_component():
+    t = np.arange(150)[:, None]
+    slow = np.sin(2 * np.pi * t / 50) * np.ones((1, 4))
+    alternating = np.where(t % 2, -1.0, 1.0) * np.arange(1, 5)
+    out = normalization.notch_nyquist(slow + alternating)
+    assert np.abs(np.fft.rfft(out, axis=0))[-1].max() < 1e-3   # Nyquist bin gone
+    np.testing.assert_allclose(out, slow, atol=1e-4)           # the rest untouched
