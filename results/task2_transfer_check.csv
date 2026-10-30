@@ -1,8 +1,8 @@
 experiment,target_room,K,metric,value
 task2_transfer_check_ssl_full_as_is,A,,macro_f1,0.13641755634638197
-task2_transfer_check_ssl_full_as_is,B,,macro_f1,0.1772639691714836
-task2_transfer_check_ssl_full_per_room_standardised,A,,macro_f1,0.38184934632226425
-task2_transfer_check_ssl_full_per_room_standardised,B,,macro_f1,0.18467653689608196
+task2_transfer_check_ssl_full_as_is,B,,macro_f1,0.18311874105865522
+task2_transfer_check_ssl_full_per_room_standardised,A,,macro_f1,0.2124785405499201
+task2_transfer_check_ssl_full_per_room_standardised,B,,macro_f1,0.09214706122586257
 task2_transfer_check_handcrafted_as_is,A,,macro_f1,0.13641755634638197
 task2_transfer_check_handcrafted_as_is,B,,macro_f1,0.18560606060606058
 task2_transfer_check_handcrafted_per_room_standardised,A,,macro_f1,0.16007883133291426

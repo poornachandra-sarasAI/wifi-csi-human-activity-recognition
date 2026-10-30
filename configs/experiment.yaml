@@ -176,6 +176,17 @@ normalize:
       align: none
       scope: per_window_scalar
       subband_neutralize: null
+    task2_notched:                # task2_level_free + Nyquist notch (fix 2)
+      # Fix 1 left the SIT<->WALK swap in place. Room A's interleaved frame
+      # streams put 40% of its dynamic-channel power at Nyquist (B: 1.3%), a
+      # pipeline signature the dynamic channel carries straight into the
+      # encoder. The notch projects out each subcarrier's period-2 component
+      # per window: nothing is fitted, both rooms get the same transform.
+      detrend: two_channel
+      align: none
+      scope: per_window_scalar
+      subband_neutralize: null
+      nyquist_notch: true
     task3:                        # cross-room transfer - remove the room
       detrend: per_window
       align: per_room
@@ -190,7 +201,7 @@ task1:
   window_length_sweep: [1, 10, 25, 50, 100, 150]   # spec section 11 figure
 
 task2:
-  normalize_preset: task2_level_free
+  normalize_preset: task2_notched
   # Every value below is fixed a priori. None is tuned on local_validation;
   # the only data-driven choice is the probe's C, picked by cross-validation
   # on development captures (src/task2_probe.py).
