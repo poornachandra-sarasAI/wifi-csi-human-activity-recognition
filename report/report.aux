@@ -1,0 +1,84 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{wang2015understanding,yang2018device,li2019towards}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction, Scenario \& Problem Formulation}{1}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}The Assistive Healthcare Scenario}{1}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Mathematical Formulation and Problem Space}{1}{subsection.1.2}\protected@file@percent }
+\citation{csi_dataset,schafer2021human}
+\citation{pedregosa2011scikit}
+\citation{paszke2019pytorch}
+\citation{gringoli2019free}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Activity Spaces and The Cross-Room Challenge Tiers}{2}{subsection.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Student-Owned Python Sensing \& Preprocessing Pipeline}{2}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Pipeline Independence \& Clean-Room Implementation}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Empirical Bitfield Resolution for BCM4366c0 Packed CSI}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textbf  {End-to-end Python sensing, representation-learning and adaptation pipeline.} The two source archives are asymmetric: Room~A arrives as raw Nexmon \texttt  {.pcap} and must be decoded to amplitude in Python, while Room~B is already amplitude \texttt  {.csv}. Both are brought into one 256-column intermediate form, after which the pipeline is source-agnostic. The original capture is the atomic unit of the development/validation split, so every window derived from a capture stays on one side of it. Windows are stored un-normalised and a preset is applied at load time, which lets all three tasks share a single \texttt  {windows/} directory. Both rooms use the same radio platform throughout: 5\,GHz, 80\,MHz, BCM4366c0 with Nexmon CSI extraction.}}{3}{figure.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:pipeline_diagram}{{1}{3}{\textbf {End-to-end Python sensing, representation-learning and adaptation pipeline.} The two source archives are asymmetric: Room~A arrives as raw Nexmon \texttt {.pcap} and must be decoded to amplitude in Python, while Room~B is already amplitude \texttt {.csv}. Both are brought into one 256-column intermediate form, after which the pipeline is source-agnostic. The original capture is the atomic unit of the development/validation split, so every window derived from a capture stays on one side of it. Windows are stored un-normalised and a preset is applied at load time, which lets all three tasks share a single \texttt {windows/} directory. Both rooms use the same radio platform throughout: 5\,GHz, 80\,MHz, BCM4366c0 with Nexmon CSI extraction}{figure.caption.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Discovery of the Nexmon Frame-Interleaving Hardware Artifact}{3}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Data Cleaning, Quality Control \& Windowing}{3}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Leakage-Safe Normalization Framework}{4}{subsection.2.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Evaluation Protocol \& Leakage Controls}{4}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Capture-Level Isolation \& Partition Integrity}{4}{subsection.3.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Capture-Disjoint Dataset Partitioning Across Rooms and Splits.}}{4}{table.caption.2}\protected@file@percent }
+\newlabel{tab:dataset_composition}{{1}{4}{Capture-Disjoint Dataset Partitioning Across Rooms and Splits}{table.caption.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Task 1: Recorded-Environment Identification}{4}{section.4}\protected@file@percent }
+\newlabel{sec:task1}{{4}{4}{Task 1: Recorded-Environment Identification}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}The Illusion of Universal Room Fingerprinting}{4}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Systematic Ablation Ladder}{4}{subsection.4.2}\protected@file@percent }
+\citation{chen2020simple}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Task 1: Environment classification accuracy vs window length $T_{\text  {win}} \in \{1, 10, 25, 50, 100, 150\}$. Naive presets achieve 1.000 accuracy at $T=1$ due to the global scale artifact.}}{5}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:task1_window_length}{{2}{5}{Task 1: Environment classification accuracy vs window length $T_{\text {win}} \in \{1, 10, 25, 50, 100, 150\}$. Naive presets achieve 1.000 accuracy at $T=1$ due to the global scale artifact}{figure.caption.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Task 1 Ablation Ladder: Unmasking the Session Confound.}}{5}{table.caption.4}\protected@file@percent }
+\newlabel{tab:task1_results}{{2}{5}{Task 1 Ablation Ladder: Unmasking the Session Confound}{table.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Finding: Confounding of Room and Session Dynamics}{5}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Task 2: Self-Supervised CSI Representation Learning}{5}{section.5}\protected@file@percent }
+\newlabel{sec:task2}{{5}{5}{Task 2: Self-Supervised CSI Representation Learning}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Self-Supervised Architecture \& Pretraining Objective}{5}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Adjacency-Breaking Augmentations for Frame Interleaving}{5}{subsection.5.2}\protected@file@percent }
+\citation{snell2017prototypical}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Baselines \& Linear-Probe Evaluation Protocol}{6}{subsection.5.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Task 2 Linear-Probe Benchmark: 8-Class Validation Performance (Mean $\pm $ Std across 3 pretraining seeds).}}{6}{table.caption.5}\protected@file@percent }
+\newlabel{tab:task2_results}{{3}{6}{Task 2 Linear-Probe Benchmark: 8-Class Validation Performance (Mean $\pm $ Std across 3 pretraining seeds)}{table.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Experimental Findings \& Representation Analysis}{6}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Task 3: Cross-Room Few-Label Adaptation}{6}{section.6}\protected@file@percent }
+\newlabel{sec:task3}{{6}{6}{Task 3: Cross-Room Few-Label Adaptation}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Few-Shot Adaptation Architecture}{6}{subsection.6.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Task 2 encoder diagnosis: 2-D UMAP of the frozen SimCLR embeddings, coloured by room (left) and by activity (right). The representation separates the two rooms completely; within each room dynamic activities form coherent clusters, while \textsc  {Sit} and \textsc  {Stand} overlap. The equivalent projections for the handcrafted, random-weight and no-adjacency-break representations are in \texttt  {figures/task2\_umap.png} in the repository.}}{7}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:task2_umap}{{3}{7}{Task 2 encoder diagnosis: 2-D UMAP of the frozen SimCLR embeddings, coloured by room (left) and by activity (right). The representation separates the two rooms completely; within each room dynamic activities form coherent clusters, while \textsc {Sit} and \textsc {Stand} overlap. The equivalent projections for the handcrafted, random-weight and no-adjacency-break representations are in \texttt {figures/task2\_umap.png} in the repository}{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}The Level-Free Rerun \& Retraction of Spurious Transfer}{7}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Quantitative Results \& Label Efficiency Curves}{7}{subsection.6.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Task 3 Few-Shot Adaptation Benchmark at $K=5$ (Oracle Routing, Validation Set, 30 Runs).}}{7}{table.caption.7}\protected@file@percent }
+\newlabel{tab:task3_headline}{{4}{7}{Task 3 Few-Shot Adaptation Benchmark at $K=5$ (Oracle Routing, Validation Set, 30 Runs)}{table.caption.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Task 3 label efficiency curves: Macro-F1 vs $K \in \{1, 5, 10, 20\}$ for Target Room~A and Room~B, showing scaling on target-exclusive classes vs stagnation on shared classes.}}{8}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:task3_efficiency}{{4}{8}{Task 3 label efficiency curves: Macro-F1 vs $K \in \{1, 5, 10, 20\}$ for Target Room~A and Room~B, showing scaling on target-exclusive classes vs stagnation on shared classes}{figure.caption.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Optimal Hungarian Diagnostic \& Confusion Matrix Analysis}{8}{subsection.6.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Hungarian optimal-assignment diagnostic: the best Macro-F1 reachable by any one-to-one relabelling of the predicted classes. The optimal permutation swaps \textsc  {Sit}$\leftrightarrow $\textsc  {Walk} in \emph  {both} directions (Room~A additionally swaps \textsc  {Stand}$\leftrightarrow $\textsc  {Fall}); all other activities map to themselves. This is an \emph  {oracle} computed from validation labels --- a diagnostic upper bound, never an achieved result.}}{8}{table.caption.9}\protected@file@percent }
+\newlabel{tab:hungarian_bound}{{5}{8}{Hungarian optimal-assignment diagnostic: the best Macro-F1 reachable by any one-to-one relabelling of the predicted classes. The optimal permutation swaps \textsc {Sit}$\leftrightarrow $\textsc {Walk} in \emph {both} directions (Room~A additionally swaps \textsc {Stand}$\leftrightarrow $\textsc {Fall}); all other activities map to themselves. This is an \emph {oracle} computed from validation labels --- a diagnostic upper bound, never an achieved result}{table.caption.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Task 3 row-normalised confusion at $K=5$; configuration as in Table~\ref {tab:task3_per_activity}. Room~B collapses \textsc  {Sit} and \textsc  {Stand} into \textsc  {Walk}; Room~A collapses static postures into transitions.}}{8}{figure.caption.10}\protected@file@percent }
+\newlabel{fig:task3_confusion}{{5}{8}{Task 3 row-normalised confusion at $K=5$; configuration as in Table~\ref {tab:task3_per_activity}. Room~B collapses \textsc {Sit} and \textsc {Stand} into \textsc {Walk}; Room~A collapses static postures into transitions}{figure.caption.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Routing Contribution Ablation}{8}{subsection.6.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Per-activity precision, recall and F1 at $K=5$ (specification Section~11): SSL encoder, refined prototypes, oracle routing, pooled over 30 runs ($3$ seeds $\times \,10$ draws, 750 windows per class). Every shared activity --- transferred with no target label --- scores below every target-exclusive activity learned from just $K=5$ captures.}}{9}{table.caption.11}\protected@file@percent }
+\newlabel{tab:task3_per_activity}{{6}{9}{Per-activity precision, recall and F1 at $K=5$ (specification Section~11): SSL encoder, refined prototypes, oracle routing, pooled over 30 runs ($3$ seeds $\times \,10$ draws, 750 windows per class). Every shared activity --- transferred with no target label --- scores below every target-exclusive activity learned from just $K=5$ captures}{table.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Routing ablation at $K=5$: oracle vs predicted vs no routing, both target rooms.}}{9}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:task3_routing}{{6}{9}{Routing ablation at $K=5$: oracle vs predicted vs no routing, both target rooms}{figure.caption.12}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Critical Limitations \& Confounding Factors}{9}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Team Member Contributions \& Logistics}{9}{section.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Mandatory AI Tool Use Disclosure}{9}{section.9}\protected@file@percent }
+\bibstyle{IEEEtran}
+\bibcite{csi_dataset}{1}
+\bibcite{schafer2021human}{2}
+\bibcite{gringoli2019free}{3}
+\bibcite{chen2020simple}{4}
+\bibcite{snell2017prototypical}{5}
+\bibcite{wang2015understanding}{6}
+\bibcite{yang2018device}{7}
+\bibcite{li2019towards}{8}
+\bibcite{pedregosa2011scikit}{9}
+\bibcite{paszke2019pytorch}{10}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Team Member Contribution Statement.}}{10}{table.caption.13}\protected@file@percent }
+\newlabel{tab:contributions}{{7}{10}{Team Member Contribution Statement}{table.caption.13}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{10}{section.10}\protected@file@percent }
+\gdef \@abspage@last{10}
