@@ -31,9 +31,11 @@ raw/experiment3/Data/                               # Room B, *.csv
 ## Running
 
 ```bash
-python run_episode.py              # full pipeline, end to end
-python run_episode.py --skip-ingest   # reuse intermediate_csv/
-python -m pytest tests/ -q            # leakage + contract tests
+python run_episode.py                  # full pipeline, end to end
+python run_episode.py --skip-ingest    # reuse intermediate_csv/
+python run_episode.py --predict-only   # predict from existing windows/
+python run_episode.py --episode DIR    # predict a supplied episode (no labels needed)
+python -m pytest tests/ -q             # leakage + contract tests
 ```
 
 Individual stages:
